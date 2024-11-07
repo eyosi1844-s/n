@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign-Up Page</title>
+  <style>
+    /* Your existing CSS styles */
+    /* Styles for new fields added */
+    .form-container label {
+      display: block;
+      margin: 10px 0 5px;
+      font-size: 14px;
+    }
+    input[type="text"], input[type="password"], input[type="date"], input[type="email"], input[type="tel"], input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Sign Up</h2>
+    <form id="signupForm">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+
+      <label for="firstName">First Name:</label>
+      <input type="text" id="firstName" placeholder="First Name" required>
+
+      <label for="secondName">Second Name:</label>
+      <input type="text" id="secondName" placeholder="Second Name" required>
+
+      <label for="lastName">Last Name:</label>
+      <input type="text" id="lastName" placeholder="Last Name" required>
+
+      <label for="dob">Date of Birth:</label>
+      <input type="date" id="dob" required>
+
+      <label for="classLevel">Class Level:</label>
+      <input type="text" id="classLevel" placeholder="Class Level" required>
+
+      <label for="email">Email (optional):</label>
+      <input type="email" id="email" placeholder="Email">
+
+      <label for="phone">Phone Number:</label>
+      <input type="tel" id="phone" placeholder="Phone Number" required>
+
+      <p class="instruction">Upload screenshot of your payment statement:</p>
+      <input type="file" id="file" required>
+
+      <button type="submit">Sign Up</button>
+      <p id="message"></p>
+    </form>
+  </div>
+
+  <!-- Firebase SDKs and Initialization -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "your_api_key",
+      authDomain: "your_auth_domain",
+      projectId: "your_project_id",
+      storageBucket: "your_storage_bucket",
+      messagingSenderId: "your_messaging_sender_id",
+      appId: "your_app_id",
+      measurementId: "your_measurement_id"
+    };
+
+    // Initialize Firebase and Firestore
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // Handle form submission and save data
+    document.getElementById("signupForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const firstName = document.getElementById("firstName").value;
+      const secondName = document.getElementById("secondName").value;
+      const lastName = document.getElementById("lastName").value;
+      const dob = document.getElementById("dob").value;
+      const classLevel = document.getElementById("classLevel").value;
+      const email = document.getElementById("email").value;
+      const phone = document.getElementById("phone").value;
+      const fileInput = document.getElementById("file");
+      const message = document.getElementById("message");
+
+      try {
+        // Save user data to Firestore
+        const docRef = await addDoc(collection(db, "users"), {
+          username,
+          password,
+          firstName,
+          secondName,
+          lastName,
+          dob,
+          classLevel,
+          email,
+          phone,
+        });
+
+        // Upload file to Firebase Storage
+        const file = fileInput.files[0];
+        if (file) {
+          const storageRef = ref(storage, `payment_statements/${docRef.id}_${file.name}`);
+          await uploadBytes(storageRef, file);
+        }
+
+        message.style.color = "green";
+        message.textContent = "Sign-up successful!";
+      } catch (error) {
+        console.error("Error saving data:", error);
+        message.style.color = "red";
+        message.textContent = "Failed to submit. Please try again.";
+      }
+    });
+  </script>
+</body>
+</html>
